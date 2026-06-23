@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="아라비카와 로부스타 국제 월평균 가격을 비교하는 커피 가격 지표">
+  <title>국제 커피 가격 지표 | 로스터현</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="brand">1985 COFFEE DATA</p>
+      <h1>국제 커피 가격 지표</h1>
+      <p class="subtitle">아라비카·로부스타 월평균 가격 비교</p>
+    </div>
+    <div class="header-actions">
+      <a class="talk-button" href="https://talk.naver.com/ct/wcbwvv" target="_blank" rel="noopener noreferrer">
+        <span class="talk-mark" aria-hidden="true">N</span>
+        <span>톡톡 문의</span>
+      </a>
+      <span class="version">제작: 로스터현</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls" aria-label="가격 지표 설정">
+      <div class="segmented" role="group" aria-label="품목 선택">
+        <button class="active" type="button" data-coffee="both">전체 비교</button>
+        <button type="button" data-coffee="arabica">아라비카</button>
+        <button type="button" data-coffee="robusta">로부스타</button>
+      </div>
+      <div class="segmented" role="group" aria-label="기간 선택">
+        <button class="active" type="button" data-period="1">최근 1년</button>
+        <button type="button" data-period="10">최근 10년</button>
+      </div>
+      <button id="refresh-data" class="refresh-button" type="button">최신 데이터 확인</button>
+    </section>
+
+    <section class="summary-grid" aria-label="가격 요약">
+      <article class="arabica-card">
+        <div class="card-heading">
+          <span class="coffee-dot arabica"></span>
+          <strong>아라비카</strong>
+        </div>
+        <p class="price" id="arabica-latest">-</p>
+        <p class="unit">US￠/lb</p>
+        <p class="krw-price" id="arabica-krw">-</p>
+        <p class="change" id="arabica-change">-</p>
+      </article>
+      <article class="robusta-card">
+        <div class="card-heading">
+          <span class="coffee-dot robusta"></span>
+          <strong>로부스타</strong>
+        </div>
+        <p class="price" id="robusta-latest">-</p>
+        <p class="unit">US￠/lb</p>
+        <p class="krw-price" id="robusta-krw">-</p>
+        <p class="change" id="robusta-change">-</p>
+      </article>
+      <article>
+        <span class="label">선택 기간 최고가</span>
+        <p class="metric" id="period-high">-</p>
+        <p class="krw-price" id="period-high-krw">-</p>
+        <p class="metric-note" id="period-high-note">-</p>
+      </article>
+      <article>
+        <span class="label">선택 기간 최저가</span>
+        <p class="metric" id="period-low">-</p>
+        <p class="krw-price" id="period-low-krw">-</p>
+        <p class="metric-note" id="period-low-note">-</p>
+      </article>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">MONTHLY PRICE TREND</p>
+          <h2 id="chart-title">최근 1년 가격 변화</h2>
+        </div>
+        <span>단위: US￠/lb</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="price-chart" role="img" aria-label="아라비카와 로부스타 국제 월평균 가격 그래프"></canvas>
+        <div id="chart-tooltip" class="chart-tooltip" hidden></div>
+      </div>
+      <div id="chart-legend" class="legend"></div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">MONTHLY DATA</p>
+          <h2 id="table-title">월별 가격표</h2>
+        </div>
+        <button id="download-csv" class="download-button" type="button">CSV 저장</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th id="date-column-title">기준월</th>
+              <th>아라비카</th>
+              <th>전월 대비</th>
+              <th>로부스타</th>
+              <th>전월 대비</th>
+            </tr>
+          </thead>
+          <tbody id="price-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p id="status" class="status" aria-live="polite">데이터를 불러오는 중입니다.</p>
+    <div class="conversion-note">
+      <strong>단위 및 원화 환산 안내</strong>
+      <p><code>US￠/lb</code>는 1파운드(453.592g)당 미국 센트 가격입니다.</p>
+      <p id="exchange-note">원화 가격은 최신 원/달러 환율만 적용한 단순 환산값입니다.</p>
+      <p>운임, 관세, 부가세, 보험료, 수입사 비용 및 유통 마진은 포함하지 않습니다.</p>
+    </div>
+    <p class="notice">
+      IMF 국제 원자재 대표가격을 FRED가 제공하는 월평균 지표입니다. ICE 선물의 특정 거래일 종가와는 다를 수 있습니다.
+    </p>
+  </main>
+
+  <footer>
+    <p>출처: International Monetary Fund, Primary Commodity Prices · FRED, Federal Reserve Bank of St. Louis</p>
+    <p>가격 자료는 참고용이며 거래 또는 투자 판단의 근거로 사용할 수 없습니다.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
