@@ -3,11 +3,39 @@ const ctx = canvas.getContext("2d");
 const tableBody = document.querySelector("#price-table");
 const statusText = document.querySelector("#status");
 const tooltip = document.querySelector("#chart-tooltip");
+const exchangeButton = document.querySelector("#refresh-exchange");
+const currentExchange = document.querySelector("#current-exchange");
 
 let sourceData = { rows: [], exchangeRate: 1503.96, exchangeRateDate: "2026-05-29" };
 let coffeeMode = "both";
 let periodYears = 1;
 let chartGeometry = null;
+
+const EXCHANGE_STORAGE_KEY = "coffee-price-usd-krw-rate";
+const EXCHANGE_APIS = [
+  {
+    url: "https://open.er-api.com/v6/latest/USD",
+    read(data) {
+      if (data.result !== "success") throw new Error("ExchangeRate-API 응답 오류");
+      const timestamp = Number(data.time_last_update_unix);
+      return {
+        rate: Number(data.rates?.KRW),
+        date: timestamp
+          ? new Date(timestamp * 1000).toISOString().slice(0, 10)
+          : String(data.time_last_update_utc || "").slice(0, 16),
+      };
+    },
+  },
+  {
+    url: "https://api.frankfurter.dev/v1/latest?base=USD&symbols=KRW",
+    read(data) {
+      return {
+        rate: Number(data.rates?.KRW),
+        date: data.date,
+      };
+    },
+  },
+];
 
 const embeddedRows = [
   ["2024-01-01",203.87913,148.12522],["2024-02-01",208.78333,153.22762],
@@ -81,6 +109,94 @@ function formatWon(value) {
   return `${Math.round(value).toLocaleString("ko-KR")}원/kg`;
 }
 
+function loadStoredExchangeRate() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(EXCHANGE_STORAGE_KEY));
+    const rate = Number(stored?.rate);
+    if (!Number.isFinite(rate) || rate < 500 || rate > 3000 || !stored?.date) return;
+    sourceData.exchangeRate = rate;
+    sourceData.exchangeRateDate = stored.date;
+  } catch {
+    // Storage can be unavailable in private browsing or restricted environments.
+  }
+}
+
+function saveExchangeRate(rate, date) {
+  try {
+    localStorage.setItem(EXCHANGE_STORAGE_KEY, JSON.stringify({ rate, date }));
+  } catch {
+    // The updated rate still applies for the current page session.
+  }
+}
+
+function formatExchangeDate(date) {
+  const match = String(date || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[1]}.${match[2]}.${match[3]}` : String(date || "기준일 미상");
+}
+
+function showCurrentExchange(message = "") {
+  const rate = Number(sourceData.exchangeRate) || 1503.96;
+  currentExchange.classList.toggle("error", Boolean(message));
+  currentExchange.textContent = message ||
+    `현재 1달러 = ${format(rate)}원 · ${formatExchangeDate(sourceData.exchangeRateDate)}`;
+}
+
+function validateExchange(exchange) {
+  if (
+    !Number.isFinite(exchange.rate) ||
+    exchange.rate < 500 ||
+    exchange.rate > 3000 ||
+    !exchange.date
+  ) {
+    throw new Error("올바르지 않은 환율 응답");
+  }
+  return exchange;
+}
+
+async function fetchLatestExchange() {
+  const errors = [];
+  for (const api of EXCHANGE_APIS) {
+    try {
+      const response = await fetch(api.url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return validateExchange(api.read(await response.json()));
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  throw new AggregateError(errors, "모든 환율 서버 요청 실패");
+}
+
+async function updateExchangeRate() {
+  exchangeButton.disabled = true;
+  exchangeButton.textContent = "환율 확인 중...";
+  exchangeButton.classList.remove("success", "error");
+  currentExchange.classList.remove("error");
+  currentExchange.textContent = "최신 환율을 확인하는 중...";
+
+  try {
+    const exchange = await fetchLatestExchange();
+    sourceData.exchangeRate = exchange.rate;
+    sourceData.exchangeRateDate = exchange.date;
+    saveExchangeRate(exchange.rate, exchange.date);
+    render();
+    exchangeButton.textContent = "환율 적용 완료";
+    exchangeButton.classList.add("success");
+  } catch (error) {
+    console.error("Exchange rate update failed:", error);
+    const rate = Number(sourceData.exchangeRate) || 1503.96;
+    showCurrentExchange(`갱신 실패 · 기존 ${format(rate)}원 유지`);
+    exchangeButton.textContent = "환율 확인 실패";
+    exchangeButton.classList.add("error");
+  } finally {
+    window.setTimeout(() => {
+      exchangeButton.disabled = false;
+      exchangeButton.textContent = "최신 환율 적용";
+      exchangeButton.classList.remove("success", "error");
+    }, 2200);
+  }
+}
+
 async function loadData() {
   statusText.classList.remove("error");
   statusText.textContent = "최신 데이터를 확인하는 중입니다.";
@@ -101,6 +217,7 @@ async function loadData() {
     statusText.textContent = "내장 데이터를 표시했습니다. GitHub Actions 실행 후 전체 10년 자료로 자동 교체됩니다.";
   }
 
+  loadStoredExchangeRate();
   render();
 }
 
@@ -135,6 +252,7 @@ function render() {
   document.querySelector("#exchange-note").textContent =
     `원화 가격은 ${sourceData.exchangeRateDate || "최근 기준"} 원/달러 환율 ` +
     `1달러=${format(sourceData.exchangeRate || 1503.96)}원만 적용한 단순 환산값입니다.`;
+  showCurrentExchange();
 }
 
 function renderSummary(rows) {
@@ -351,6 +469,7 @@ document.querySelectorAll("[data-period]").forEach((button) => {
 });
 
 document.querySelector("#refresh-data").addEventListener("click", loadData);
+exchangeButton.addEventListener("click", updateExchangeRate);
 document.querySelector("#download-csv").addEventListener("click", downloadCsv);
 canvas.addEventListener("mousemove", showTooltip);
 canvas.addEventListener("mouseleave", () => { tooltip.hidden = true; });

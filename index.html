@@ -10,7 +10,7 @@
 <body>
   <header class="site-header">
     <div>
-      <p class="brand">1985 COFFEE DATA</p>
+      <p class="brand">ROASTER HYUN DATA</p>
       <h1>국제 커피 가격 지표</h1>
       <p class="subtitle">아라비카·로부스타 월평균 가격 비교</p>
     </div>
@@ -34,7 +34,13 @@
         <button class="active" type="button" data-period="1">최근 1년</button>
         <button type="button" data-period="10">최근 10년</button>
       </div>
-      <button id="refresh-data" class="refresh-button" type="button">최신 데이터 확인</button>
+      <div class="refresh-actions">
+        <div class="exchange-control">
+          <span id="current-exchange" class="current-exchange" aria-live="polite">현재 환율 확인 중</span>
+          <button id="refresh-exchange" class="exchange-button" type="button">최신 환율 적용</button>
+        </div>
+        <button id="refresh-data" class="refresh-button" type="button">최신 데이터 확인</button>
+      </div>
     </section>
 
     <section class="summary-grid" aria-label="가격 요약">
@@ -116,6 +122,7 @@
       <strong>단위 및 원화 환산 안내</strong>
       <p><code>US￠/lb</code>는 1파운드(453.592g)당 미국 센트 가격입니다.</p>
       <p id="exchange-note">원화 가격은 최신 원/달러 환율만 적용한 단순 환산값입니다.</p>
+      <p>환율은 영업일 기준 참고 환율이며 실제 송금·결제 환율과 다를 수 있습니다.</p>
       <p>운임, 관세, 부가세, 보험료, 수입사 비용 및 유통 마진은 포함하지 않습니다.</p>
     </div>
     <p class="notice">
@@ -124,7 +131,11 @@
   </main>
 
   <footer>
-    <p>출처: International Monetary Fund, Primary Commodity Prices · FRED, Federal Reserve Bank of St. Louis</p>
+    <p>
+      출처: International Monetary Fund, Primary Commodity Prices · FRED, Federal Reserve Bank of St. Louis ·
+      환율: <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">ExchangeRate-API</a>,
+      <a href="https://frankfurter.dev" target="_blank" rel="noopener noreferrer">Frankfurter</a>
+    </p>
     <p>가격 자료는 참고용이며 거래 또는 투자 판단의 근거로 사용할 수 없습니다.</p>
   </footer>
 
