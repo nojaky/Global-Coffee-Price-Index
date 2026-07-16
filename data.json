@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-07-10T03:58:53+00:00",
-  "latestObservation": "2026-05-01",
-  "exchangeRate": 1538.05,
-  "exchangeRateDate": "2026-07-02",
+  "updatedAt": "2026-07-16T07:49:48+00:00",
+  "latestObservation": "2026-06-01",
+  "exchangeRate": 1501.06,
+  "exchangeRateDate": "2026-07-10",
   "unit": "U.S. cents per pound",
   "frequency": "Monthly",
   "source": "International Monetary Fund via FRED",
@@ -12,11 +12,6 @@
     "exchange_rate": "DEXKOUS"
   },
   "rows": [
-    {
-      "date": "2016-05-01",
-      "arabica": 155.19455,
-      "robusta": 83.93318
-    },
     {
       "date": "2016-06-01",
       "arabica": 165.45227,
@@ -614,8 +609,13 @@
     },
     {
       "date": "2026-05-01",
-      "arabica": 317.53385,
-      "robusta": 166.58692
+      "arabica": 315.05952,
+      "robusta": 166.51238
+    },
+    {
+      "date": "2026-06-01",
+      "arabica": 307.82636,
+      "robusta": 169.39045
     }
   ]
 }
