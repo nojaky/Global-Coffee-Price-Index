@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-07-30T08:00:52+00:00",
+  "updatedAt": "2026-08-06T08:09:04+00:00",
   "latestObservation": "2026-06-01",
-  "exchangeRate": 1460.76,
-  "exchangeRateDate": "2026-07-24",
+  "exchangeRate": 1436.81,
+  "exchangeRateDate": "2026-07-31",
   "unit": "U.S. cents per pound",
   "frequency": "Monthly",
   "source": "International Monetary Fund via FRED",
