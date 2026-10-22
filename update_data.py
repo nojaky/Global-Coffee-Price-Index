@@ -15,6 +15,8 @@ from openpyxl import load_workbook
 OUTPUT = Path(__file__).with_name('data.json')
 FRED = {'arabica': 'PCOFFOTMUSDM', 'robusta': 'PCOFFROBUSDM', 'exchange_rate': 'DEXKOUS'}
 WORLD_BANK_URLS = [
+    # World Bank 2026 document collection (2025 collections can have stale snapshots).
+    'https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Monthly.xlsx',
     'https://thedocs.worldbank.org/en/doc/5d903e848db1d1b83e0ec8f744e55570-0350012021/related/CMO-Historical-Data-Monthly.xlsx',
     'https://thedocs.worldbank.org/en/doc/18675f1d1639c7a34d463f59263ba0a2-0050012025/related/CMO-Historical-Data-Monthly.xlsx',
 ]
@@ -99,14 +101,26 @@ def parse_pink_sheet(blob):
 
 
 def fetch_world_bank():
+    """Inspect ALL usable mirrors, not just the first downloadable XLSX.
+
+    Older World Bank document collections may serve archived snapshots, so
+    download success does not mean the observation date is recent.
+    """
     failures = []
+    candidates = []
     for url in WORLD_BANK_URLS:
         try:
             rows = parse_pink_sheet(download(url))
-            return rows, url
+            latest = rows[-1]['date']
+            print(f'World Bank candidate: {latest} ({len(rows)} rows) {url}', flush=True)
+            candidates.append((latest, rows, url))
         except Exception as exc:
             failures.append(f'{url}: {exc}')
-    raise RuntimeError('World Bank 다운로드 실패: ' + ' | '.join(failures))
+            print(f'World Bank URL failed: {url}: {exc}', flush=True)
+    if not candidates:
+        raise RuntimeError('World Bank 다운로드 실패: ' + ' | '.join(failures))
+    candidates.sort(key=lambda c: c[0], reverse=True)
+    return candidates[0][1], candidates[0][2]
 
 
 def fetch_fred_coffee():
@@ -135,10 +149,16 @@ def main():
 
     if not candidates:
         raise RuntimeError('커피 가격 다운로드가 모두 실패했습니다. 기존 파일 유지. ' + ' | '.join(problems))
+    for observed, _, provider, url in candidates:
+        print(f'Coffee data candidate: {provider}, through {observed}; {url}', flush=True)
     candidates.sort(key=lambda c: (c[0], c[2].startswith('World Bank')), reverse=True)
     latest, rows, source, source_url = candidates[0]
     if latest < old.get('latestObservation', ''):
-        raise RuntimeError(f'기존 자료보다 오래된 데이터입니다: {latest} < {old["latestObservation"]}')
+        # Never overwrite a more recent dataset with an older archive.
+        print(f'WARNING: 공급처 최신 데이터 {latest}가 기존 {old["latestObservation"]}보다 오래되었습니다. 기존 데이터 유지.', flush=True)
+        for problem in problems:
+            print('Warning:', problem, flush=True)
+        return
     cutoff = f'{int(latest[:4]) - 10:04d}-{latest[5:7]}-01'
     rows = [r for r in rows if r['date'] >= cutoff]
     if len(rows) < 100:
