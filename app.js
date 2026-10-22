@@ -197,28 +197,48 @@ async function updateExchangeRate() {
   }
 }
 
-async function loadData() {
-  statusText.classList.remove("error");
-  statusText.textContent = "최신 데이터를 확인하는 중입니다.";
+let dataLoadInProgress = false;
 
+async function loadData() {
+  if (dataLoadInProgress) return;
+  dataLoadInProgress = true;
+  const button = document.querySelector("#refresh-data");
+  const previousLabel = button.textContent;
+  const previousObservation = sourceData.latestObservation || sourceData.rows.at(-1)?.date;
+  button.disabled = true;
+  button.textContent = "확인 중...";
+  statusText.classList.remove("error");
+  statusText.textContent = "서버에 게시된 최신 월평균 자료를 확인하는 중...";
   try {
     const response = await fetch(`data.json?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    sourceData = await response.json();
-    if (!Array.isArray(sourceData.rows) || !sourceData.rows.length) throw new Error("데이터가 없습니다.");
-    statusText.textContent = `최근 업데이트: ${sourceData.updatedAt} · 월평균 자료 ${sourceData.rows.length}건`;
-  } catch {
-    sourceData = {
-      updatedAt: "내장 데이터",
-      exchangeRate: 1503.96,
-      exchangeRateDate: "2026-05-29",
-      rows: embeddedRows,
-    };
-    statusText.textContent = "내장 데이터를 표시했습니다. GitHub Actions 실행 후 전체 10년 자료로 자동 교체됩니다.";
+    const next = await response.json();
+    if (!Array.isArray(next.rows) || next.rows.length < 2) throw new Error("데이터가 없습니다.");
+    next.rows.sort((a, b) => a.date.localeCompare(b.date));
+    const latest = next.latestObservation || next.rows.at(-1).date;
+    if (previousObservation && latest < previousObservation) {
+      throw new Error("서버 자료가 현재 표시된 자료보다 오래되었습니다.");
+    }
+    sourceData = next;
+    const published = monthLabel(latest);
+    const prefix = previousObservation
+      ? (latest > previousObservation ? "새로운 월별 자료 적용 완료" : "확인 완료 · 새로운 관측월 없음")
+      : "데이터 불러오기 완료";
+    statusText.textContent = `${prefix} · 최신 기준월 ${published} · 원본: ${next.source || "정보 없음"} · 자료 ${next.rows.length}건 · 파일 생성 ${String(next.updatedAt || "미상").slice(0, 10)}`;
+  } catch (error) {
+    console.error("Coffee price data load failed:", error);
+    if (!sourceData.rows.length) {
+      sourceData = { updatedAt: "내장 데이터", exchangeRate: 1503.96, exchangeRateDate: "2026-05-29", rows: embeddedRows };
+    }
+    statusText.classList.add("error");
+    statusText.textContent = `최신 자료를 확인하지 못했습니다 (${error.message}). 현재 표시된 자료를 유지합니다.`;
+  } finally {
+    loadStoredExchangeRate();
+    render();
+    button.disabled = false;
+    button.textContent = previousLabel;
+    dataLoadInProgress = false;
   }
-
-  loadStoredExchangeRate();
-  render();
 }
 
 function filteredRows() {
