@@ -26,8 +26,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Excel reader
-        run: python -m pip install openpyxl==3.1.5
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --disable-pip-version-check openpyxl==3.1.5
+          python -c "import openpyxl; print('openpyxl installed:', openpyxl.__version__)"
 
       - name: Download monthly coffee benchmarks
         run: python update_data.py
