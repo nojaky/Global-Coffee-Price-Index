@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-10-22T10:42:22+00:00",
+  "updatedAt": "2026-10-29T11:49:51+00:00",
   "latestObservation": "2026-09-01",
-  "exchangeRate": 1334.03,
-  "exchangeRateDate": "2026-10-16",
+  "exchangeRate": 1325.06,
+  "exchangeRateDate": "2026-10-23",
   "unit": "U.S. cents per pound",
   "frequency": "Monthly",
   "source": "World Bank Commodity Price Data (Pink Sheet)",
