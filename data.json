@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-10-29T11:49:51+00:00",
-  "latestObservation": "2026-09-01",
-  "exchangeRate": 1325.06,
-  "exchangeRateDate": "2026-10-23",
+  "updatedAt": "2026-11-05T13:32:02+00:00",
+  "latestObservation": "2026-10-01",
+  "exchangeRate": 1333.99,
+  "exchangeRateDate": "2026-10-30",
   "unit": "U.S. cents per pound",
   "frequency": "Monthly",
   "source": "World Bank Commodity Price Data (Pink Sheet)",
@@ -13,11 +13,6 @@
     "exchange_rate": "DEXKOUS"
   },
   "rows": [
-    {
-      "date": "2016-09-01",
-      "arabica": 176.44743,
-      "robusta": 97.06877
-    },
     {
       "date": "2016-10-01",
       "arabica": 179.16899,
@@ -617,6 +612,11 @@
       "date": "2026-09-01",
       "arabica": 329.30806,
       "robusta": 167.37558
+    },
+    {
+      "date": "2026-10-01",
+      "arabica": 335.65835,
+      "robusta": 164.65403
     }
   ]
 }
